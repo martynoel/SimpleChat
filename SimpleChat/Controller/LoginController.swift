@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Firebase
 
 class LoginController: UIViewController {
     
@@ -22,18 +23,61 @@ class LoginController: UIViewController {
         return view
     }()
     
-    let loginRegisterButton: UIButton = {
+    // lazy var gives access to self
+    lazy var loginRegisterButton: UIButton = {
         let button = UIButton(type: .system)
         button.backgroundColor = UIColor(r: 66, g: 65, b: 61)
         button.setTitle("Register", for: .normal)
+        button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        button.setTitleColor(.white, for: .normal)
+        button.addTarget(self, action: #selector(handleRegister), for: .touchUpInside)
         
         return button
     }()
+    
+    // Authenticate user upon clicking "Register" button
+    @objc func handleRegister() {
+        
+        guard let email = emailTextField.text, let password = passwordTextField.text, let name = nameTextField.text else {
+            print("Form is not valid")
+            
+            return
+        }
+        
+        // Persist user info in database
+        Auth.auth().createUser(withEmail: email, password: password, completion: {
+            (user: User?, error) in
+            
+            if error != nil {
+                print(error)
+                return
+            }
+            
+            // Successfully authenticated user
+            
+            guard let uid = user?.uid else { return }
+            
+            let ref = Database.database().reference(fromURL: "https://simple-chat-c0458.firebaseio.com/")
+            let usersReference = ref.child("users").child(uid)
+            
+            let values = ["name": name, "email": email, "password": password]
+            
+            usersReference.updateChildValues(values, withCompletionBlock: { (err, ref) in
+                
+                if err != nil {
+                    print(err)
+                    return
+                }
+                
+                print("Saved user into Firebase DB successfully")
+            })
+        })
+        
+        print("Registered")
+    }
     
     let nameTextField: UITextField = {
         let tf = UITextField()
