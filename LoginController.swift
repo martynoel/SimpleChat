@@ -37,13 +37,44 @@ class LoginController: UIViewController {
         
         button.translatesAutoresizingMaskIntoConstraints = false
         
-        button.addTarget(self, action: #selector(handleRegister), for: .touchUpInside)
+        button.addTarget(self, action: #selector(handleLoginRegister), for: .touchUpInside)
         
         return button
     }()
     
+    // Toggle functionality between log in and register
+    @objc func handleLoginRegister() {
+        if loginRegisterSegmentedControl.selectedSegmentIndex == 0 {
+            handleLogin()
+        }
+        else {
+            handleRegister()
+        }
+    }
+    
+    // Log in user
+    func handleLogin() {
+        guard let email = emailTextField.text, let password = passwordTextField.text else {
+            print("Form is not valid")
+            
+            return
+        }
+        
+        Auth.auth().signIn(withEmail: email, password: password) { (user, error) in
+            
+            // If login fails
+            if error != nil {
+                print(error)
+                return
+            }
+            
+            // Dismiss VC if logged in successfully
+            self.dismiss(animated: true, completion: nil)
+        }
+    }
+    
     // Authenticate user upon clicking "Register" button
-    @objc func handleRegister() {
+    func handleRegister() {
         
         guard let email = emailTextField.text, let password = passwordTextField.text, let name = nameTextField.text else {
             print("Form is not valid")
@@ -76,7 +107,8 @@ class LoginController: UIViewController {
                     return
                 }
                 
-                print("Saved user into Firebase DB successfully")
+                // Dismiss VC after successful login
+                self.dismiss(animated: true, completion: nil)
             })
         })
         
